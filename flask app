@@ -1,0 +1,9 @@
+digit-clustering-app/
+├── app.py               # Flask backend
+├── templates/
+│   ├── index.html       # Frontend
+├── requirements.txt     # Python dependencies
+├── Procfile             # Deployment instruction (for Heroku)
+├── runtime.txt          # Python version (optional for Heroku)
+├── README.md            # Project description
+├── dataset/             # (Optional) Store MNIST dataset
