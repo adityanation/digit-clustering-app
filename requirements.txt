@@ -1,0 +1,6 @@
+fflask
+numpy
+pandas
+scikit-learn
+pillow
+gunicorn
