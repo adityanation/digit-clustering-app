@@ -1,72 +1,77 @@
-# Import necessary libraries
-import pandas as pd
+# Install dependencies
+!pip install gradio scikit-learn joblib matplotlib --quiet
+
+import gradio as gr
 import numpy as np
-from sklearn.preprocessing import StandardScaler
-from sklearn.mixture import GaussianMixture
-from sklearn.cluster import AgglomerativeClustering
-from scipy.cluster.hierarchy import dendrogram, linkage
+import cv2
+import time
 import matplotlib.pyplot as plt
-from sklearn.metrics import accuracy_score, confusion_matrix
+from sklearn.datasets import fetch_openml
+from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
+import joblib
 
-# Mount Google Drive and load the dataset
-from google.colab import drive
-drive.mount('/content/drive', force_remount=True)
+# Load MNIST dataset
+mnist = fetch_openml('mnist_784', version=1)
+X, y = mnist.data, mnist.target.astype(int)
 
-file_path = '/content/sample_data/mnist_train_small.csv'
-df = pd.read_csv(file_path)
+# Reduce dataset to 1000 samples (100 per digit) for fast training
+X_train, _, y_train, _ = train_test_split(X, y, train_size=1000, stratify=y, random_state=42)
 
-# Data Preprocessing
-# Assuming the first column is the labels and the rest are pixel values
-X = df.drop(columns=[df.columns[0]])  # Dropping the label column
-y = df[df.columns[0]]  # Labels (if needed for validation)
+# Train an SVM model with better settings
+svm_model = SVC(kernel="rbf", gamma="scale")
+svm_model.fit(X_train, y_train)
 
-# Normalize the data (important for clustering)
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
+# Save trained model
+joblib.dump(svm_model, "svm_model.pkl")
 
-# ---------------------- Gaussian Mixture Model (GMM) ----------------------
+# Load trained model
+svm_model = joblib.load("svm_model.pkl")
 
-# Define and train the GMM model
-gmm = GaussianMixture(n_components=10, random_state=42)  # 10 for 10 digits
-gmm.fit(X_scaled)
+# Function to predict & visualize the output
+def predict_image(image):
+    start_time = time.time()  # Start timing
 
-# Predict the cluster for each data point
-gmm_labels = gmm.predict(X_scaled)
+    # Convert image to grayscale if needed
+    if len(image.shape) == 3:
+        gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+    else:
+        gray = image
 
-# Plot a few examples and their corresponding GMM cluster
-plt.figure(figsize=(10, 5))
-for i in range(10):
-    plt.subplot(2, 5, i+1)
-    plt.imshow(X.iloc[i].values.reshape(28, 28), cmap='gray')
-    plt.title(f'Cluster: {gmm_labels[i]}')
-    plt.axis('off')
-plt.show()
+    # Resize to 28x28
+    gray = cv2.resize(gray, (28, 28), interpolation=cv2.INTER_AREA)
 
-# ------------------- Hierarchical Clustering -----------------------------
+    # Normalize and flatten
+    gray = gray / 255.0
+    input_data = gray.flatten().reshape(1, -1)
 
-# Perform hierarchical clustering
-hierarchical_clustering = AgglomerativeClustering(n_clusters=10)
-hierarchical_labels = hierarchical_clustering.fit_predict(X_scaled)
+    # Make prediction
+    predicted_digit = svm_model.predict(input_data)[0]  # Model predicts the actual digit
 
-# Plot dendrogram (subset of 100 samples for better visualization)
-Z = linkage(X_scaled[:100], 'ward')
-plt.figure(figsize=(10, 7))
-dendrogram(Z)
-plt.show()
+    end_time = time.time()
+    processing_time = round(end_time - start_time, 2)  # Time taken
 
-# Plot a few examples and their corresponding Hierarchical cluster
-plt.figure(figsize=(10, 5))
-for i in range(10):
-    plt.subplot(2, 5, i+1)
-    plt.imshow(X.iloc[i].values.reshape(28, 28), cmap='gray')
-    plt.title(f'Cluster: {hierarchical_labels[i]}')
-    plt.axis('off')
-plt.show()
+    # Create an output image with the prediction label
+    fig, ax = plt.subplots()
+    ax.imshow(gray, cmap="gray")
+    ax.set_title(f"Predicted Digit: {predicted_digit}", fontsize=14, color="red")
+    ax.axis("off")
 
-# ------------------- Evaluation (Optional) -------------------------------
+    # Save the image
+    output_path = "output_prediction.png"
+    plt.savefig(output_path, bbox_inches="tight")
+    plt.close()
 
-# GMM Accuracy and Confusion Matrix (optional)
-print("GMM Confusion Matrix:\n", confusion_matrix(y, gmm_labels))
+    return output_path, f"Predicted Digit: {predicted_digit} (Processed in {processing_time} sec)"
 
-# Hierarchical Clustering Accuracy and Confusion Matrix (optional)
-print("Hierarchical Clustering Confusion Matrix:\n", confusion_matrix(y, hierarchical_labels))
+# Define Gradio Interface
+interface = gr.Interface(
+    fn=predict_image,
+    inputs=gr.Image(image_mode="L", type="numpy"),
+    outputs=["image", "text"],
+    title="Handwritten Digit Recognition",
+    description="Upload a handwritten digit image and get the predicted number (0-9)."
+)
+
+# Launch Gradio App
+interface.launch(share=True)
