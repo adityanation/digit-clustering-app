@@ -10,19 +10,6 @@ Process images with advanced preprocessing techniques
 
 Perform clustering using machine learning algorithms
 
-Visualize clustered results
-Interactive web UI powered by Flask
-Usage
-Upload a handwritten digit image.
-The system preprocesses and clusters the digit.
-View the clustering results and analysis.
-Technologies Used
-Python
-Flask (Web Framework)
-OpenCV (Image Preprocessing)
-Scikit-learn (Clustering Algorithms)
-NumPy, Pandas (Data Processing)
-Deployment
-To deploy online using GitHub and a cloud service (e.g., Heroku, Render):
+
 
 
