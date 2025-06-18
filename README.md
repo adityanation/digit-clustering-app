@@ -14,3 +14,31 @@ digit-clustering/
 ├── requirements.txt       # Python dependencies
 ├── README.md              # Project documentation
 └── main.py                # Main script to run clustering
+
+ Features
+
+✅ Load and preprocess MNIST data
+
+✅ Dimensionality reduction using PCA or t-SNE
+
+✅ Clustering using K-Means (optionally DBSCAN, Gaussian Mixture)
+
+✅ Visualization of clusters
+
+✅ Evaluation using cluster-label mapping and accuracy
+
+✅ Interactive web app (Gradio/Streamlit)
+
+🧰 Technologies Used
+
+Python 3.x
+
+Scikit-learn
+
+NumPy, Pandas
+
+Matplotlib, Seaborn
+
+TensorFlow/Keras (for MNIST loader)
+
+Gradio or Streamlit (for UI)
