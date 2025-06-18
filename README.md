@@ -25,6 +25,4 @@ NumPy, Pandas (Data Processing)
 Deployment
 To deploy online using GitHub and a cloud service (e.g., Heroku, Render):
 
-Push the repository to GitHub.
-Use a platform like Heroku or Render to deploy.
-Ensure the required dependencies and Procfile are set up.
+
